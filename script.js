@@ -93,48 +93,88 @@ function GameControl() {
 
   function switchTurn() {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
+    updateCurrentPlayerDisplay(); // Update display when switching turns
   }
 
-  function getMarkInput() {
-    const row = parseInt(prompt("Enter the row number (0, 1, 2):"), 10);
-    const column = parseInt(prompt("Enter the column number (0, 1, 2):"), 10);
-    return { row, column };
-  }
-
-  function gameLoop() {
-    while (true) {
-      gameboard.printBoard();
-      const { row, column } = getMarkInput();
-
-      if (row >= 0 && row < 3 && column >= 0 && column < 3) {
-        const markPlaced = gameboard.addMark(row, column, activePlayer.mark);
-
-        if (!markPlaced) {
-          console.log("Cell already occupied, try again.");
-          continue;
-        }
-
-        if (gameboard.checkWin()) {
-          gameboard.printBoard();
-          console.log(`${activePlayer.name} wins!`);
-          break;
-        }
-
-        if (gameboard.checkDraw()) {
-          gameboard.printBoard();
-          console.log("It's a draw!");
-          break;
-        }
-
-        switchTurn();
-      } else {
-        console.log(
-          "Invalid input. Please enter a row and column between 0 and 2."
-        );
+  function handleCellClick(row, column) {
+    if (gameboard.addMark(row, column, activePlayer.mark)) {
+      if (gameboard.checkWin()) {
+        gameboard.printBoard();
+        alert(`${activePlayer.name} wins!`);
+        resetGame();
+        return;
       }
+
+      if (gameboard.checkDraw()) {
+        gameboard.printBoard();
+        alert("It's a draw!");
+        resetGame();
+        return;
+      }
+
+      switchTurn(); // Switch player and update display
+      updateUI();
+    } else {
+      alert("Cell already occupied, try again.");
     }
   }
 
-  gameLoop();
+  function updateUI() {
+    const board = gameboard.getBoard();
+    board.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        const button = document.querySelector(
+          `[data-row="${rowIndex}"][data-column="${colIndex}"]`
+        );
+        if (button) {
+          button.textContent = cell || "";
+          button.classList.remove("x", "o"); // Remove any existing classes
+          if (cell === "X") {
+            button.classList.add("x"); // Add X class
+          } else if (cell === "O") {
+            button.classList.add("o"); // Add O class
+          }
+        }
+      });
+    });
+  }
+
+  function updateCurrentPlayerDisplay() {
+    const playerNameElement = document.getElementById("player-name");
+    if (playerNameElement) {
+      playerNameElement.textContent = activePlayer.name;
+    }
+  }
+
+  function displayController() {
+    const buttons = document.querySelectorAll(".game-cell"); // Select all button elements
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const row = parseInt(button.dataset.row); // Get row from button data attribute
+        const column = parseInt(button.dataset.column); // Get column from button data attribute
+
+        handleCellClick(row, column);
+      });
+    });
+  }
+
+  function resetGame() {
+    const board = gameboard.getBoard();
+    for (let row = 0; row < board.length; row++) {
+      for (let col = 0; col < board[row].length; col++) {
+        board[row][col] = null;
+      }
+    }
+    updateUI();
+    activePlayer = players[0]; // Reset to PlayerOne
+    updateCurrentPlayerDisplay(); // Update display when resetting the game
+  }
+
+  // Initialize the UI
+  updateCurrentPlayerDisplay(); // Ensure the current player is displayed on load
+  updateUI();
+  displayController();
 }
+
 GameControl();
