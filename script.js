@@ -50,7 +50,16 @@
     // No win found
     return false;
   };
-  return { getBoard, printBoard, addMark, checkWin };
+
+  const checkDraw = () => {
+    const isFull = board.every((row) => row.every((cell) => cell !== null));
+
+    const winner = checkWin();
+
+    return isFull, !winner;
+  };
+
+  return { getBoard, printBoard, addMark, checkWin, checkDraw };
 })();
 
 function GameControl() {
