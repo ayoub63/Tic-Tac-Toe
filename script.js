@@ -74,7 +74,7 @@ const gameboard = (function Gameboard() {
   return { getBoard, printBoard, addMark, checkWin, checkDraw };
 })();
 
-function GameControl() {
+const GameControl = (function () {
   const PlayerOneName = "PlayerOne";
   const PlayerTwoName = "PlayerTwo";
 
@@ -93,7 +93,7 @@ function GameControl() {
 
   function switchTurn() {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
-    updateCurrentPlayerDisplay(); // Update display when switching turns
+    DisplayController.updateCurrentPlayerDisplay(activePlayer.name); // Update display when switching turns
   }
 
   function handleCellClick(row, column) {
@@ -113,14 +113,37 @@ function GameControl() {
       }
 
       switchTurn(); // Switch player and update display
-      updateUI();
+      DisplayController.updateUI(gameboard.getBoard());
     } else {
       alert("Cell already occupied, try again.");
     }
   }
 
-  function updateUI() {
+  function resetGame() {
     const board = gameboard.getBoard();
+    for (let row = 0; row < board.length; row++) {
+      for (let col = 0; col < board[row].length; col++) {
+        board[row][col] = null;
+      }
+    }
+    DisplayController.updateUI(board);
+    activePlayer = players[0]; // Reset to PlayerOne
+    DisplayController.updateCurrentPlayerDisplay(activePlayer.name); // Update display when resetting the game
+  }
+
+  function initialize() {
+    DisplayController.updateCurrentPlayerDisplay(activePlayer.name); // Ensure the current player is displayed on load
+    DisplayController.updateUI(gameboard.getBoard());
+    DisplayController.setupEventListeners(handleCellClick);
+  }
+
+  return { initialize };
+})();
+
+// Initialize the game
+
+const DisplayController = (function () {
+  function updateUI(board) {
     board.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         const button = document.querySelector(
@@ -139,14 +162,14 @@ function GameControl() {
     });
   }
 
-  function updateCurrentPlayerDisplay() {
+  function updateCurrentPlayerDisplay(playerName) {
     const playerNameElement = document.getElementById("player-name");
     if (playerNameElement) {
-      playerNameElement.textContent = activePlayer.name;
+      playerNameElement.textContent = playerName;
     }
   }
 
-  function displayController() {
+  function setupEventListeners(handleCellClick) {
     const buttons = document.querySelectorAll(".game-cell"); // Select all button elements
 
     buttons.forEach((button) => {
@@ -159,22 +182,7 @@ function GameControl() {
     });
   }
 
-  function resetGame() {
-    const board = gameboard.getBoard();
-    for (let row = 0; row < board.length; row++) {
-      for (let col = 0; col < board[row].length; col++) {
-        board[row][col] = null;
-      }
-    }
-    updateUI();
-    activePlayer = players[0]; // Reset to PlayerOne
-    updateCurrentPlayerDisplay(); // Update display when resetting the game
-  }
+  return { updateUI, updateCurrentPlayerDisplay, setupEventListeners };
+})();
 
-  // Initialize the UI
-  updateCurrentPlayerDisplay(); // Ensure the current player is displayed on load
-  updateUI();
-  displayController();
-}
-
-GameControl();
+GameControl.initialize();
